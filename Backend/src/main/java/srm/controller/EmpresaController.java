@@ -3,6 +3,7 @@ package srm.controller;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import srm.dto.RespostaDto;
 import srm.dto.empresa.EmpresaBuscarDto;
 import srm.dto.empresa.EmpresaCriarDto;
 import srm.service.EmpresaService;
@@ -21,12 +22,12 @@ public class EmpresaController {
     }
 
     @PostMapping
-    public ResponseEntity<UUID> criar(@RequestBody EmpresaCriarDto dto) {
-        UUID id = empresaService.criar(dto);
+    public ResponseEntity<RespostaDto<UUID>> criar(@RequestBody EmpresaCriarDto dto) {
+        RespostaDto<UUID> resposta = empresaService.criar(dto);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(id);
+                .body(resposta);
     }
 
     @GetMapping("/{id}")

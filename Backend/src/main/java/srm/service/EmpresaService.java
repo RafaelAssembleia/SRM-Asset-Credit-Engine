@@ -2,8 +2,9 @@ package srm.service;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import srm.dto.empresa.EmpresaCriarDto;
+import srm.dto.RespostaDto;
 import srm.dto.empresa.EmpresaBuscarDto;
+import srm.dto.empresa.EmpresaCriarDto;
 import srm.entity.Empresa;
 import srm.exception.RegraNegocioException;
 import srm.exception.RecursoNaoEncontradoException;
@@ -22,7 +23,7 @@ public class EmpresaService {
     }
 
     @Transactional
-    public UUID criar(EmpresaCriarDto dto) {
+    public RespostaDto<UUID> criar(EmpresaCriarDto dto) {
 
         if (dto == null)
             throw new RegraNegocioException(
@@ -59,7 +60,11 @@ public class EmpresaService {
 
         Empresa empresaSalva = empresaRepository.save(empresa);
 
-        return empresaSalva.getId();
+        return new RespostaDto<>(
+                "Empresa criada com sucesso.",
+                empresaSalva.getId(),
+                true
+        );
     }
 
     private String normalizarCnpj(String cnpj) {
