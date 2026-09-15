@@ -18,6 +18,7 @@ import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class PrecificacaoService {
@@ -116,6 +117,7 @@ public class PrecificacaoService {
                         ARREDONDAMENTO
                 );
 
+        UUID idTaxaCambio = null;
         BigDecimal taxaCambio = null;
         BigDecimal valorPagamento = valorPresente;
 
@@ -124,13 +126,13 @@ public class PrecificacaoService {
             if (recebivel.getMoeda() == Moeda.BRL
                     && moedaPagamento == Moeda.USD) {
 
-                TaxaCambioBuscarDto taxaVigente =
-                        taxaCambioService.buscarTaxaVigente(
-                                Moeda.USD,
-                                Moeda.BRL,
-                                dataReferencia
-                        );
+                TaxaCambioBuscarDto taxaVigente = taxaCambioService.buscarTaxaVigente(
+                        Moeda.USD,
+                        Moeda.BRL,
+                        dataReferencia
+                );
 
+                idTaxaCambio = taxaVigente.id();
                 taxaCambio = taxaVigente.taxa();
 
                 valorPagamento = valorPresente
@@ -158,6 +160,7 @@ public class PrecificacaoService {
                 valorPresente,
                 valorDesagio,
                 moedaPagamento,
+                idTaxaCambio,
                 taxaCambio,
                 valorPagamento
         );
