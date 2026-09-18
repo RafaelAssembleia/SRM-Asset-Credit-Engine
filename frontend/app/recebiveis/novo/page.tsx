@@ -81,7 +81,7 @@ export default function NovoRecebivelPage() {
     setErroSimulacao(null);
     try {
 
-      const resultado = await precificacaoService.simularRascunho({
+      const resultado = await precificacaoService.simular({
         tipoRecebivel: form.tipo,
         valorFace: debouncedValorFace,
         moedaOrigem: form.moeda,
