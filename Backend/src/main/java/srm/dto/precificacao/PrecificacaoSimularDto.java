@@ -1,11 +1,16 @@
 package srm.dto.precificacao;
 
 import srm.enums.Moeda;
+import srm.enums.TipoRecebivel;
 
-import java.util.UUID;
+import java.math.BigDecimal;
+import java.time.LocalDate;
 
 public record PrecificacaoSimularDto(
-        UUID recebivelId,
-        Moeda moedaPagamento
+        TipoRecebivel tipoRecebivel,
+        BigDecimal valorFace,
+        Moeda moedaOrigem,
+        Moeda moedaPagamento,
+        LocalDate dataVencimento
 ) {
 }

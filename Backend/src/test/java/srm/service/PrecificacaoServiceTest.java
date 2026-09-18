@@ -4,11 +4,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import srm.dto.precificacao.PrecificacaoResultadoDto;
 import srm.dto.taxaCambio.TaxaCambioBuscarDto;
-import srm.entity.Empresa;
-import srm.entity.Recebivel;
 import srm.enums.Moeda;
-import srm.enums.TipoRecebivel;
-import srm.repository.RecebivelRepository;
 import srm.strategy.ChequePreDatadoStrategy;
 import srm.strategy.DuplicataMercantilStrategy;
 import srm.strategy.PrecificacaoStrategy;
@@ -17,73 +13,192 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 class PrecificacaoServiceTest {
 
     private PrecificacaoService precificacaoService;
     private TaxaCambioService taxaCambioService;
 
-    private Empresa empresaCedente;
-    private Empresa empresaDevedora;
+    private PrecificacaoStrategy duplicataStrategy;
+    private PrecificacaoStrategy chequeStrategy;
 
     @BeforeEach
     void setUp() {
 
-        RecebivelRepository recebivelRepository = mock(RecebivelRepository.class);
-
         taxaCambioService = mock(TaxaCambioService.class);
 
+        duplicataStrategy = new DuplicataMercantilStrategy();
+
+        chequeStrategy = new ChequePreDatadoStrategy();
+
         List<PrecificacaoStrategy> strategies = List.of(
-                new DuplicataMercantilStrategy(),
-                new ChequePreDatadoStrategy()
+                duplicataStrategy,
+                chequeStrategy
         );
 
         precificacaoService = new PrecificacaoService(
-                recebivelRepository,
                 taxaCambioService,
                 strategies
-        );
-
-        empresaCedente = new Empresa(
-                "Empresa Cedente",
-                "12345678000190"
-        );
-
-        empresaDevedora = new Empresa(
-                "Empresa Devedora",
-                "98765432000110"
         );
     }
 
     @Test
     void deveCalcularDuplicataMercantilEmBrl() {
 
-        LocalDateTime dataReferencia = LocalDateTime.of(2026, 9, 14, 10, 0);
+        LocalDateTime dataReferencia = LocalDateTime.of(
+                2026,
+                9,
+                15,
+                10,
+                0
+        );
 
-        Recebivel recebivel = new Recebivel(
-                empresaCedente,
-                empresaDevedora,
-                TipoRecebivel.DUPLICATA_MERCANTIL,
-                new BigDecimal("100000.00"),
-                Moeda.BRL,
-                LocalDate.of(2026, 12, 14)
+        LocalDate dataVencimento = LocalDate.of(
+                2026,
+                12,
+                15
         );
 
         PrecificacaoResultadoDto resultado = precificacaoService.calcular(
-                recebivel,
+                duplicataStrategy,
+                new BigDecimal("100000.00"),
                 Moeda.BRL,
-                dataReferencia
+                Moeda.BRL,
+                dataReferencia,
+                dataVencimento
+        );
+
+        assertEquals(
+                3,
+                resultado.prazoMeses()
         );
 
         assertEquals(
                 new BigDecimal("0.015"),
                 resultado.spread()
+        );
+
+        assertEquals(
+                new BigDecimal("92859.94"),
+                resultado.valorPresente()
+        );
+
+        assertEquals(
+                new BigDecimal("7140.06"),
+                resultado.valorDesagio()
+        );
+
+        assertEquals(
+                new BigDecimal("92859.94"),
+                resultado.valorPagamento()
+        );
+
+        assertNull(resultado.idTaxaCambio());
+        assertNull(resultado.taxaCambio());
+    }
+
+    @Test
+    void deveCalcularChequePreDatadoEmBrl() {
+
+        LocalDateTime dataReferencia = LocalDateTime.of(
+                2026,
+                9,
+                15,
+                10,
+                0
+        );
+
+        LocalDate dataVencimento = LocalDate.of(
+                2026,
+                11,
+                15
+        );
+
+        PrecificacaoResultadoDto resultado = precificacaoService.calcular(
+                chequeStrategy,
+                new BigDecimal("25000.00"),
+                Moeda.BRL,
+                Moeda.BRL,
+                dataReferencia,
+                dataVencimento
+        );
+
+        assertEquals(
+                2,
+                resultado.prazoMeses()
+        );
+
+        assertEquals(
+                new BigDecimal("0.025"),
+                resultado.spread()
+        );
+
+        assertEquals(
+                new BigDecimal("23337.77"),
+                resultado.valorPresente()
+        );
+
+        assertEquals(
+                new BigDecimal("1662.23"),
+                resultado.valorDesagio()
+        );
+
+        assertEquals(
+                new BigDecimal("23337.77"),
+                resultado.valorPagamento()
+        );
+
+        assertNull(resultado.idTaxaCambio());
+        assertNull(resultado.taxaCambio());
+    }
+
+    @Test
+    void deveCalcularDuplicataMercantilEmUsd() {
+
+        LocalDateTime dataReferencia = LocalDateTime.of(
+                2026,
+                9,
+                15,
+                10,
+                0
+        );
+
+        LocalDate dataVencimento = LocalDate.of(
+                2026,
+                12,
+                15
+        );
+
+        UUID idTaxaCambio = UUID.randomUUID();
+
+        TaxaCambioBuscarDto taxaVigente = mock(TaxaCambioBuscarDto.class);
+
+        when(taxaVigente.id())
+                .thenReturn(idTaxaCambio);
+
+        when(taxaVigente.taxa())
+                .thenReturn(
+                        new BigDecimal("5.4321")
+                );
+
+        when(taxaCambioService.buscarTaxaVigente(
+                Moeda.USD,
+                Moeda.BRL,
+                dataReferencia
+        )).thenReturn(taxaVigente);
+
+        PrecificacaoResultadoDto resultado = precificacaoService.calcular(
+                duplicataStrategy,
+                new BigDecimal("100000.00"),
+                Moeda.BRL,
+                Moeda.USD,
+                dataReferencia,
+                dataVencimento
         );
 
         assertEquals(
@@ -102,100 +217,8 @@ class PrecificacaoServiceTest {
         );
 
         assertEquals(
-                new BigDecimal("92859.94"),
-                resultado.valorPagamento()
-        );
-
-        assertNull(resultado.taxaCambio());
-    }
-
-    @Test
-    void deveCalcularChequePreDatadoEmBrl() {
-
-        LocalDateTime dataReferencia = LocalDateTime.of(2026, 9, 14, 10, 0);
-
-        Recebivel recebivel = new Recebivel(
-                empresaCedente,
-                empresaDevedora,
-                TipoRecebivel.CHEQUE_PRE_DATADO,
-                new BigDecimal("25000.00"),
-                Moeda.BRL,
-                LocalDate.of(2026, 11, 14)
-        );
-
-        PrecificacaoResultadoDto resultado = precificacaoService.calcular(
-                recebivel,
-                Moeda.BRL,
-                dataReferencia
-        );
-
-        assertEquals(
-                new BigDecimal("0.025"),
-                resultado.spread()
-        );
-
-        assertEquals(
-                2,
-                resultado.prazoMeses()
-        );
-
-        assertEquals(
-                new BigDecimal("23337.77"),
-                resultado.valorPresente()
-        );
-
-        assertEquals(
-                new BigDecimal("1662.23"),
-                resultado.valorDesagio()
-        );
-
-        assertEquals(
-                new BigDecimal("23337.77"),
-                resultado.valorPagamento()
-        );
-
-        assertNull(resultado.taxaCambio());
-    }
-
-    @Test
-    void deveCalcularDuplicataMercantilEmUsd() {
-
-        LocalDateTime dataReferencia = LocalDateTime.of(2026, 9, 14, 10, 0);
-
-        Recebivel recebivel = new Recebivel(
-                empresaCedente,
-                empresaDevedora,
-                TipoRecebivel.DUPLICATA_MERCANTIL,
-                new BigDecimal("100000.00"),
-                Moeda.BRL,
-                LocalDate.of(2026, 12, 14)
-        );
-
-        TaxaCambioBuscarDto taxaCambio = mock(TaxaCambioBuscarDto.class);
-
-        when(taxaCambio.taxa())
-                .thenReturn(new BigDecimal("5.4321"));
-
-        when(taxaCambioService.buscarTaxaVigente(
-                Moeda.USD,
-                Moeda.BRL,
-                dataReferencia
-        )).thenReturn(taxaCambio);
-
-        PrecificacaoResultadoDto resultado = precificacaoService.calcular(
-                recebivel,
-                Moeda.USD,
-                dataReferencia
-        );
-
-        assertEquals(
-                new BigDecimal("92859.94"),
-                resultado.valorPresente()
-        );
-
-        assertEquals(
-                new BigDecimal("7140.06"),
-                resultado.valorDesagio()
+                idTaxaCambio,
+                resultado.idTaxaCambio()
         );
 
         assertEquals(
