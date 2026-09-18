@@ -9,7 +9,10 @@ import srm.entity.Recebivel;
 import srm.enums.Moeda;
 import srm.repository.LiquidacaoRepository;
 import srm.repository.RecebivelRepository;
+import srm.strategy.PrecificacaoStrategy;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
@@ -91,9 +94,12 @@ class LiquidacaoServiceTest {
 
         verify(precificacaoService, never())
                 .calcular(
-                        any(Recebivel.class),
+                        any(PrecificacaoStrategy.class),
+                        any(BigDecimal.class),
                         any(Moeda.class),
-                        any(LocalDateTime.class)
+                        any(Moeda.class),
+                        any(LocalDateTime.class),
+                        any(LocalDate.class)
                 );
     }
 }

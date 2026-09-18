@@ -13,6 +13,7 @@ import srm.exception.RegraNegocioException;
 import srm.exception.RecursoNaoEncontradoException;
 import srm.repository.LiquidacaoRepository;
 import srm.repository.RecebivelRepository;
+import srm.strategy.PrecificacaoStrategy;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -106,10 +107,15 @@ public class LiquidacaoService {
 
         LocalDateTime dataLiquidacao = LocalDateTime.now();
 
+        PrecificacaoStrategy strategy = precificacaoService.buscarStrategy(recebivel.getTipo());
+
         PrecificacaoResultadoDto precificacao = precificacaoService.calcular(
-                recebivel,
+                strategy,
+                recebivel.getValorFace(),
+                recebivel.getMoeda(),
                 dto.moedaPagamento(),
-                dataLiquidacao
+                dataLiquidacao,
+                recebivel.getDataVencimento()
         );
 
         Liquidacao liquidacao = new Liquidacao(

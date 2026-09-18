@@ -1,3 +1,13 @@
+import type { Moeda } from "@/types/enums";
+
+export function formatMoeda(valor: number | null | undefined, moeda: Moeda) {
+  if (valor === null || valor === undefined) return "—";
+  return new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: moeda,
+  }).format(valor);
+}
+
 export function formatData(iso: string | null | undefined) {
   if (!iso) return "—";
   const d = new Date(iso);
@@ -33,4 +43,18 @@ export function formatCnpj(cnpj: string) {
 
 export function formatId(id: string, chars = 8) {
   return id.length > chars ? `${id.slice(0, chars)}…` : id;
+}
+
+export function formatPercent(valor: number | null | undefined) {
+  if (valor === null || valor === undefined) return "—";
+  return new Intl.NumberFormat("pt-BR", {
+    style: "percent",
+    maximumFractionDigits: 2,
+  }).format(valor);
+}
+
+export function formatLocalDate(data: string) {
+  const [ano, mes, dia] = data.slice(0, 10).split("-");
+
+  return `${dia}/${mes}/${ano}`;
 }

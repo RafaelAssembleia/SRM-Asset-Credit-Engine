@@ -87,6 +87,7 @@ public class Recebivel {
     protected void prePersist() {
         LocalDateTime agora = LocalDateTime.now();
 
+        this.situacao = SituacaoRecebivel.PENDENTE;
         this.dataCadastro = agora;
         this.dataAtualizacao = agora;
     }
