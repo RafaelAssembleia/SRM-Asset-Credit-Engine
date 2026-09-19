@@ -2,7 +2,7 @@ CREATE TABLE taxas_cambio (
     id UUID PRIMARY KEY,
     moeda_origem VARCHAR(3) NOT NULL,
     moeda_destino VARCHAR(3) NOT NULL,
-    taxa NUMERIC(19, 8) NOT NULL,
+    taxa NUMERIC(19, 6) NOT NULL,
     data_vigencia TIMESTAMP NOT NULL,
     data_cadastro TIMESTAMP NOT NULL,
     data_atualizacao TIMESTAMP NOT NULL

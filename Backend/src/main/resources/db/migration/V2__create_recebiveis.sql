@@ -2,7 +2,7 @@ CREATE TABLE recebiveis (
     id UUID PRIMARY KEY,
     empresa_cedente_id UUID NOT NULL,
     empresa_devedora_id UUID NOT NULL,
-    tipo VARCHAR(50) NOT NULL,
+    tipo VARCHAR(30) NOT NULL,
     valor_face NUMERIC(19, 2) NOT NULL,
     moeda VARCHAR(3) NOT NULL,
     data_vencimento DATE NOT NULL,

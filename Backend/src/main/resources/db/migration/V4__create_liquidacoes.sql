@@ -4,7 +4,7 @@ CREATE TABLE liquidacoes (
     id_taxa_cambio UUID,
     chave_idempotencia VARCHAR(100) NOT NULL,
     valor_face NUMERIC(19, 2) NOT NULL,
-    taxa_base NUMERIC(10, 6) NOT NULL,
+    taxa_base NUMERIC(19, 6) NOT NULL,
     spread NUMERIC(10, 6) NOT NULL,
     prazo_meses INTEGER NOT NULL,
     valor_presente NUMERIC(19, 2) NOT NULL,
